@@ -23,21 +23,30 @@ public class App {
     private final static String AUTHORITY = "https://login.microsoftonline.com/common/";
     private final static String TARGET_RESOURCE = "https://management.core.windows.net/";
 
+    /**
+     * CHANGE THESE VALUES
+     */
     // https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest#password-based-authentication
     private final static String CLIENT_ID = "<your_SP_client_id>";
+    // DO NOT HARDCODE THIS IN - set the environment variable so the SP password is
+    // not accidentally committed
+    private final static String PASSWORD = System.getenv("AZUREMLFLOW_SP_PASSWORD");
+    // Something following the below template
+    private final static String TRACKING_URI = "https://eastus2.experiments.azureml.net/history/v1.0/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.MachineLearningServices/workspaces/{workspaceName}";
+    //
+    // END VALUES TO CONFIGURE
+    //
 
     public static void main(String[] args) throws Exception {
         System.out.println("Hello AzureML!");
 
         AuthenticationResult result = getAccessTokenFromUserCredentials();
-
-        String trackingUri = "https://eastus2.experiments.azureml.net/history/v1.0/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.MachineLearningServices/workspaces/{workspaceName}";
         String armToken = result.getAccessToken();
         if (armToken == null) {
             throw new Exception("Provide a valid ARM token.");
         }
 
-        MlflowHostCredsProvider credsProvider = new BasicMlflowHostCreds(trackingUri, armToken);
+        MlflowHostCredsProvider credsProvider = new BasicMlflowHostCreds(TRACKING_URI, armToken);
         MlflowClient client = new MlflowClient(credsProvider);
 
         String experimentId = client.createExperiment("azuremlflow-java");
@@ -49,21 +58,22 @@ public class App {
     }
 
     private static AuthenticationResult getAccessTokenFromUserCredentials() throws Exception {
-        AuthenticationContext context;
         AuthenticationResult result;
         ExecutorService service = null;
         try {
             service = Executors.newFixedThreadPool(1);
-            context = new AuthenticationContext(AUTHORITY, false, service);
+            AuthenticationContext context = new AuthenticationContext(AUTHORITY, false, service);
             Future<AuthenticationResult> future = context.acquireToken(TARGET_RESOURCE,
-                    new ClientCredential(CLIENT_ID, System.getenv("AZUREMLFLOW_SP_PASSWORD")), null);
+                    new ClientCredential(CLIENT_ID, PASSWORD), null);
             result = future.get();
         } finally {
-            service.shutdown();
+            if (service != null) {
+                service.shutdown();
+            }
         }
 
         if (result == null) {
-            throw new Exception("authentication result was null");
+            throw new Exception("Authentication result was null");
         }
         return result;
     }
