@@ -31,6 +31,11 @@
         <artifactId>mlflow-client</artifactId>
         <version>0.9.1</version>
     </dependency>
+    <dependency>
+        <groupId>com.microsoft.azure</groupId>
+        <artifactId>adal4j</artifactId>
+        <version>1.6.0</version>
+		</dependency>
   </dependencies>
 
   <build>
