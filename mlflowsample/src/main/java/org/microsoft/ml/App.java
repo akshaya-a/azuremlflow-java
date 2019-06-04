@@ -19,7 +19,9 @@ import org.mlflow.tracking.creds.MlflowHostCredsProvider;
 
 public class App {
 
-    // Azure Resource Management is the target for which we're acquiring the token
+    // Azure Resource Manager (ARM) is the target for which we're acquiring a token
+    // NOTE: This is specific to the Azure public cloud. Sovereign and Government
+    // clouds (once supported) will target a different ARM endpoint (URL)
     private final static String TARGET_RESOURCE = "https://management.core.windows.net/";
 
     //
@@ -28,6 +30,8 @@ public class App {
 
     // https://docs.microsoft.com/en-us/cli/azure/create-an-azure-service-principal-azure-cli?view=azure-cli-latest#password-based-authentication
     private final static String _tenantId = "<YOUR SERVICE PRINCIPAL TENANT ID>";
+    // NOTE: The below is specific to the Azure public cloud. Sovereign and
+    // Government clouds (once supported) will target a different Authority endpoint
     private final static String AUTHORITY = String.format("https://login.microsoftonline.com/%s/oauth2/v2.0/token",
             _tenantId);
     private final static String CLIENT_ID = "<YOUR SERVICE PRINCIPAL CLIENT ID>";
@@ -36,12 +40,14 @@ public class App {
     private final static String PASSWORD_UNUSED_LEFT_FOR_CLARITY = System.getenv("AZUREMLFLOW_SP_PASSWORD");
 
     // Something following the below template
+    // Some possible values: "eastus2", "westeurope", ".."
+    private final static String _region = "<YOUR AZURE ML WORKSPACE'S REGION>";
     private final static String _subscriptionId = "<YOUR AZURE ML WORKSPACE'S SUBSCRIPTION ID>";
     private final static String _resourceGroup = "<YOUR AZURE ML WORKSPACE'S RESOURCE GROUP NAME>";
     private final static String _workspaceName = "<YOUR AZURE ML WORKSPACE NAME>";
     private final static String TRACKING_URI = String.format(
-            "https://eastus2.experiments.azureml.net/history/v1.0/subscriptions/%s/resourceGroups/%s/providers/Microsoft.MachineLearningServices/workspaces/%s",
-            _subscriptionId, _resourceGroup, _workspaceName);
+            "https://%s.experiments.azureml.net/history/v1.0/subscriptions/%s/resourceGroups/%s/providers/Microsoft.MachineLearningServices/workspaces/%s",
+            _region, _subscriptionId, _resourceGroup, _workspaceName);
     //
     // END VALUES TO CONFIGURE
     //
